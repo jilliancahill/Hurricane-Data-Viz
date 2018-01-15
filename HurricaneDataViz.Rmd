@@ -1,0 +1,48 @@
+---
+title: "Hurricane Data Viz"
+author: "Jillian Cahill"
+output:
+  html_document:
+    code_folding: show
+    css: mystyle_blue.css
+    theme: flatly
+    highlight: tango
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+    self_contained: true
+    
+---
+
+```{r}
+setwd("//users//JillianCahill//Documents//R//HurricaneDataViz")
+
+library(sp)
+library(rgdal)
+library(leaflet)
+library(ggplot2)
+library(RColorBrewer)
+
+shape_Irma<-readOGR(dsn="IRMA\\StormSurge_Probabilistic","al112017_2017090712_e10" )
+shape_Harvey<-readOGR(dsn="HARVEY\\StormSurge_Probabilistic","al092017_2017082312_e10" )
+shape_Maria<-readOGR(dsn="MARIA\\StormSurge_Probabilistic","al152017_2017092418_e10" )
+
+
+m<-leaflet()%>% addProviderTiles("CartoDB.Positron")
+
+allSurgeValues<-union(union(shape_Irma$SURGE10,shape_Harvey$SURGE10),shape_Maria$SURGE10)
+  
+pal<-colorBin(brewer.pal(7,"Blues")
+              ,allSurgeValues
+              ,bins=7)
+
+(m <-m  %>%
+    addPolygons(data=shape_Irma,weight=1,fillOpacity=0.5,group="Irma",color=~pal(shape_Irma$SURGE10))  %>%
+    addPolygons(data=shape_Harvey,weight=1,fillOpacity=0.5,group="Harvey",color=~pal(shape_Harvey$SURGE10))%>%
+    addPolygons(data=shape_Maria,weight=1,fillOpacity=0.5,group="Maria",color=~pal(shape_Maria$SURGE10)) %>%
+    addLayersControl(overlayGroups=c("Irma","Harvey","Maria"),options=layersControlOptions(collapsed=FALSE)) %>% 
+    addLegend("bottomright", pal = pal, values = allSurgeValues, title ="Storm Surge (ft)")
+)
+```
+
